@@ -43,6 +43,35 @@ class GuiTests(unittest.TestCase):
             self.root.update()
             self.assertEqual(notebook.select(), tab)
 
+    def test_controls_fit_visible_minimum_window(self) -> None:
+        """Главные элементы остаются внутри вкладок при размере 760x520."""
+        self.root.geometry("760x520")
+        self.root.deiconify()
+        for tab, controls in (
+            (self.app.calculator, (self.app.calculator.calculate_button,
+                                   self.app.calculator.right_entry)),
+            (self.app.colors, (self.app.colors.panel,
+                               self.app.colors.change_button)),
+            (self.app.clicker, (self.app.clicker.reset_button,
+                                self.app.clicker.upgrade_button)),
+            (self.app.tasks, (self.app.tasks.tree,
+                              self.app.tasks.refresh_button)),
+        ):
+            self.app.notebook.select(tab)
+            self.root.update()
+            for widget in controls:
+                with self.subTest(widget=str(widget)):
+                    self.assertTrue(widget.winfo_ismapped())
+                    self.assertGreater(widget.winfo_width(), 1)
+                    right = widget.winfo_rootx() + widget.winfo_width()
+                    bottom = widget.winfo_rooty() + widget.winfo_height()
+                    self.assertLessEqual(
+                        right, tab.winfo_rootx() + tab.winfo_width()
+                    )
+                    self.assertLessEqual(
+                        bottom, tab.winfo_rooty() + tab.winfo_height()
+                    )
+
     def test_calculator_button_and_error_recovery(self) -> None:
         """После деления на ноль можно сразу выполнить другую операцию."""
         tab = self.app.calculator
